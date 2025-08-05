@@ -36,6 +36,10 @@ html {
     gap: 5px;
 }
 
+.site-menu .sub-menu svg {
+    width: 1.2rem;
+}
+
 /*搜索框搜索图标颜色*/
 #search button i {
     color: #6C757D;
