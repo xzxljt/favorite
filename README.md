@@ -3,7 +3,7 @@
 
 > Live Preview: https://s.eallion.com
 
-[![](https://status.eallion.com/api/badge/4/uptime/168)](https://status.eallion.com/)
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/eallion/favorite) [![](https://status.eallion.com/api/badge/4/uptime/168)](https://status.eallion.com/)
 
 # 一个基于 Hugo 的静态响应式网址导航主题
 
