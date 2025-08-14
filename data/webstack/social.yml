@@ -10,10 +10,11 @@ links:
     logo: 473.svg
     url: https://app.e5n.cc/
     description: Mastodon Web Client
-  - title: Delta Chat
-    logo: delta-chat.svg
-    url: https://i.delta.chat/#a=eallion%40e5n.cc&n=Charles%20Chin
-    description: 去中心化的安全聊天软件
+  - title: XMPP
+    logo: xmpp.svg
+    url: https://xmpp.link/#eallion@e5n.cc
+    qrcode: /assets/images/qrcode/xmpp_eallion_e5n_cc.jpg
+    description: The universal messaging standard
   - title: GoToSocial
     logo: gotosocial.svg
     url: https://m.eallion.com/

@@ -16,6 +16,8 @@ var theme = {"ajaxurl":"","addico":"https:\/\/nav.baidu.cn\/wp-content\/themes\/
 <script type='text/javascript' src='{{ relURL "assets/js/app-mini.js" }}' id='appmini-js'></script>
 {{ end }}
 
+<script type='text/javascript' src='{{ relURL "assets/js/fuse.min.js?v7.1.0" }}' id='fuse-js'></script>
+
 <script type="text/javascript">
     $(document).ready(function(){
         var siteWelcome = $('#loading');
@@ -203,267 +205,276 @@ function switchNightMode(){
 }
 </script>
 
-<script> 
-// 站内搜索功能
+<script>
+// 搜索功能实现
 document.addEventListener('DOMContentLoaded', function() {
-  const searchContainer = document.querySelector('.search-container');
-  const searchInput = document.querySelector('.search-input');
-  const searchIcon = document.querySelector('.search-icon');
-  const searchIconSvg = searchIcon.querySelector('.search-icon-svg');
-  const clearIconSvg = searchIcon.querySelector('.clear-icon-svg');
-  const closeIconSvg = searchIcon.querySelector('.close-icon-svg');
-  // 获取一言和今日诗词元素
-  const hitokoto = document.getElementById('hitokoto');
-  const jinrishici = document.getElementById('jinrishici');
-  // 获取内容区域
-  const contentDiv = document.getElementById('content');
-  
-  // 添加一个标志来跟踪 fuse.js 是否已加载
-  let fuseJsLoaded = false;
-  let fuseInstance = null;
-  let searchData = null;
-  // 存储原始内容的引用
-  let originalContentChildren = [];
-  
-  // 动态加载 fuse.js 的函数
-  function loadFuseJs() {
-    return new Promise((resolve, reject) => {
-      if (fuseJsLoaded) {
-        resolve();
-        return;
-      }
-      
-      const script = document.createElement('script');
-      script.src = '/assets/js/fuse.js?v=7.1.0';
-      script.onload = () => {
-        fuseJsLoaded = true;
-        resolve();
-      };
-      script.onerror = reject;
-      document.head.appendChild(script);
-    });
-  }
-  
-  // 加载搜索数据
-  async function loadSearchData() {
-    if (searchData) return searchData;
+    const searchInput = document.querySelector('.search-input');
+    const searchIcon = document.querySelector('.search-icon');
+    const searchIconSvg = document.querySelector('.search-icon-svg');
+    const clearIconSvg = document.querySelector('.clear-icon-svg');
+    const closeIconSvg = document.querySelector('.close-icon-svg');
     
-    try {
-      const response = await fetch('/index.json');
-      searchData = await response.json();
-      return searchData;
-    } catch (error) {
-      console.error('Failed to load search data:', error);
-      return [];
+    // 标志变量
+    let fuse = null;
+    let searchData = null;
+    let debounceTimer = null;
+    
+    // 页面加载时直接初始化搜索功能
+    initializeSearch();
+    
+    // 初始化搜索功能
+    function initializeSearch() {
+        // 加载 JSON 数据
+        loadSearchData();
     }
-  }
-  
-  // 初始化 Fuse 搜索实例
-  async function initFuse() {
-    if (fuseInstance) return fuseInstance;
     
-    await loadSearchData();
-    if (typeof Fuse !== 'undefined' && searchData) {
-      fuseInstance = new Fuse(searchData, {
-        keys: ['title', 'description'],
-        threshold: 0.3,
-      });
+    // 加载搜索数据
+    function loadSearchData() {
+        fetch('/index.json')
+            .then(response => response.json())
+            .then(data => {
+                // 过滤有效的数据项，description 可以为空
+                searchData = data.filter(item => item.title && item.url);
+                
+                // 初始化 Fuse - 针对中文优化的配置
+                const options = {
+                    includeScore: true,
+                    threshold: 0.4, // 适度的匹配阈值
+                    location: 0,
+                    distance: 150, // 增加搜索距离
+                    minMatchCharLength: 1, // 最小匹配字符长度设为 1
+                    keys: [
+                        {
+                            name: 'title',
+                            weight: 0.5
+                        },
+                        {
+                            name: 'description',
+                            weight: 0.3
+                        },
+                        {
+                            name: 'url',
+                            weight: 0.2
+                        }
+                    ],
+                    shouldSort: true,
+                    includeMatches: true,
+                    findAllMatches: true, // 查找所有匹配项
+                    useExtendedSearch: false,
+                    ignoreLocation: true, // 忽略匹配位置
+                    ignoreFieldNorm: true  // 忽略字段标准化
+                };
+                fuse = new Fuse(searchData, options);
+            })
+            .catch(error => {
+                console.error('Failed to load search data:', error);
+            });
     }
-    return fuseInstance;
-  }
-  
-  // 获取所有网站卡片元素
-  function getAllSiteCards() {
-    return document.querySelectorAll('.url-card');
-  }
-  
-  // 获取所有分类标题元素
-  function getCategoryHeaders() {
-    return document.querySelectorAll('.d-flex.flex-fill');
-  }
-  
-  // 根据搜索结果隐藏/显示卡片和分类标题
-  function filterCardsBySearchResults(results) {
-    const allCards = getAllSiteCards();
-    const categoryHeaders = getCategoryHeaders();
-    const resultUrls = results.map(item => item.url);
     
-    // 隐藏所有分类标题，除了搜索结果标题
-    categoryHeaders.forEach(header => {
-      if (!header.classList.contains('search-result-title')) {
-        header.style.setProperty('display', 'none', 'important');
-      } else {
-        // 移除 hidden 类以显示搜索结果标题
-        header.classList.remove('hidden');
-      }
-    });
-    
-    allCards.forEach(card => {
-      const cardLink = card.querySelector('a[data-url]');
-      if (cardLink) {
-        const cardUrl = cardLink.getAttribute('data-url');
-        if (resultUrls.includes(cardUrl)) {
-          // 符合搜索结果，显示
-          card.style.display = '';
-        } else {
-          // 不符合搜索结果，隐藏
-          card.style.setProperty('display', 'none', 'important');
+    // 搜索执行函数
+    function executeSearch(query) {
+        if (!fuse || !searchData || !query.trim()) {
+            clearSearchResults();
+            return;
         }
-      }
-    });
-  }
-  
-  // 显示所有卡片和分类标题
-  function showAllCards() {
-    const allCards = getAllSiteCards();
-    const categoryHeaders = getCategoryHeaders();
-    
-    // 显示所有分类标题，并给搜索结果标题添加 hidden 类
-    categoryHeaders.forEach(header => {
-      header.style.display = '';
-      if (header.classList.contains('search-result-title')) {
-        header.classList.add('hidden');
-      }
-    });
-    
-    // 显示所有卡片
-    allCards.forEach(card => {
-      card.style.display = '';
-    });
-  }
-  
-  // 执行搜索
-  async function performSearch(query) {
-    if (!query.trim()) {
-      // 如果查询为空，显示所有内容
-      showAllCards();
-      return;
+        
+        // 执行搜索，不限制结果数量
+        const results = fuse.search(query);
+        
+        // 显示搜索结果标题，隐藏分类内容
+        document.querySelector('.search-result-title')?.classList.remove('hidden');
+        document.querySelectorAll('.category-item, .category-title').forEach(el => {
+            el.classList.add('hidden');
+        });
+        
+        // 渲染搜索结果
+        renderSearchResults(results);
     }
     
-    if (!fuseInstance) {
-      await initFuse();
-    }
-    
-    const results = fuseInstance.search(query).map(result => result.item);
-    filterCardsBySearchResults(results);
-  }
-  
-  // 点击搜索图标展开输入框
-  searchIcon.addEventListener('click', function(e) {
-    e.stopPropagation();
-    
-    // 如果输入框已展开
-    if (searchInput.classList.contains('expanded')) {
-      // 如果有内容，清除内容
-      if (searchInput.value) {
-        searchInput.value = '';
-        updateIcon(); // 更新图标
-        showAllCards(); // 显示所有卡片
-      } else {
-        // 如果没有内容，关闭输入框
-        searchInput.classList.remove('expanded');
-        updateIcon(); // 更新图标
-        // 显示一言和今日诗词
-        if (hitokoto) hitokoto.closest('.nav-item').style.display = '';
-        if (jinrishici) jinrishici.closest('.nav-item').style.display = '';
-        showAllCards(); // 显示所有卡片
-      }
-    } else {
-      // 如果输入框未展开，展开输入框
-      searchInput.classList.add('expanded');
-      searchInput.focus();
-      updateIcon(); // 更新图标
-      // 隐藏一言和今日诗词
-      if (hitokoto) hitokoto.closest('.nav-item').style.setProperty('display', 'none', 'important');
-      if (jinrishici) jinrishici.closest('.nav-item').style.setProperty('display', 'none', 'important');
-      
-      // 动态加载 fuse.js
-      loadFuseJs()
-        .then(() => {
-          console.log('Fuse.js loaded successfully');
-          // 初始化搜索功能
-          return initFuse();
-        })
-        .catch(error => {
-          console.error('Failed to load Fuse.js:', error);
+    // 渲染搜索结果
+    function renderSearchResults(results) {
+        // 找到 content_main.html 中的搜索结果容器
+        let resultsContainer = document.querySelector('.search-results');
+        if (!resultsContainer) {
+            // 如果找不到，创建一个新的容器
+            resultsContainer = document.createElement('div');
+            resultsContainer.className = 'search-results mt-4';
+            searchInput.closest('.s-search').after(resultsContainer);
+        } else {
+            // 移除 hidden 类
+            resultsContainer.classList.remove('hidden');
+        }
+        
+        // 清空容器
+        resultsContainer.innerHTML = '';
+        
+        if (results.length === 0) {
+            resultsContainer.innerHTML = '<div class="no-results text-center py-4">没有找到匹配的结果</div>';
+            return;
+        }
+        
+        // 创建结果行
+        const row = document.createElement('div');
+        row.className = 'row';
+        resultsContainer.appendChild(row);
+        
+        // 渲染每个结果
+        results.forEach(item => {
+            const data = item.item;
+            const url = data.url.replace(/`/g, ''); // 移除 URL 中的反引号
+            const title = data.title;
+            const description = data.description || '';
+            const logo = data.logo || '';
+            const logoUrl = `assets/images/logos/${logo}`;
+            
+            // 创建卡片 HTML
+            const cardHtml = `
+            <div class="url-card col-6 col-sm-6 col-md-4 col-xl-5a col-xxl-6a">
+                <div class="url-body default">
+                    <a href="${url}" target="_blank" data-id="" data-url="${url}" class="card no-c mb-4" data-toggle="tooltip" data-placement="bottom" data-original-title="${description}" aria-describedby="tooltip73576">
+                        <div class="card-body">
+                            <div class="url-content d-flex align-items-center">
+                                <div class="url-img mr-2 d-flex align-items-center justify-content-center">
+                                    <img class="lazy" src="${logoUrl}" data-src="${logoUrl}" onerror="this.src='https://t3.gstatic.cn/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&size=128&url=${encodeURIComponent(url)}'" alt="${title}">
+                                </div>
+                                <div class="url-info flex-fill">
+                                    <div class="text-sm overflowClip_1">
+                                        <strong>${title}</strong>
+                                    </div>
+                                    <p class="overflowClip_1 m-0 text-muted text-xs">${description}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </a>
+                    <a href="${url}" target="_blank" class="togo text-center text-muted is-views" data-id="689" data-toggle="tooltip" data-placement="right" title="" rel="nofollow" data-original-title="直达">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="1.2em" height="1.2em" viewBox="0 0 15 15"><path fill="currentColor" d="m6.146 10.146l-.353.354l.707.707l.354-.353zM9.5 7.5l.354.354l.353-.354l-.353-.354zM6.854 4.146L6.5 3.793l-.707.707l.353.354zm0 6.708l3-3l-.708-.708l-3 3zm3-3.708l-3-3l-.708.708l3 3zM7.5 1A6.5 6.5 0 0 1 14 7.5h1A7.5 7.5 0 0 0 7.5 0zM1 7.5A6.5 6.5 0 0 1 7.5 1V0A7.5 7.5 0 0 0 0 7.5zM7.5 14A6.5 6.5 0 0 1 1 7.5H0A7.5 7.5 0 0 0 7.5 15zm0 1A7.5 7.5 0 0 0 15 7.5h-1A6.5 6.5 0 0 1 7.5 14z"></path></svg>
+                    </a>
+                </div>
+            </div>
+            `;
+            
+            // 将 HTML 添加到行中
+            row.insertAdjacentHTML('beforeend', cardHtml);
         });
     }
-  });
-  
-  // 监听输入事件执行搜索
-  searchInput.addEventListener('input', function() {
-    performSearch(this.value);
-    updateIcon();
-  });
-  
-  // 输入框内容变化时更新图标
-  searchInput.addEventListener('input', function() {
-    updateIcon();
-  });
-  
-  // 鼠标进入搜索图标时更新图标
-  searchIcon.addEventListener('mouseenter', function() {
-    updateIcon();
-  });
-  
-  // 鼠标离开搜索图标时恢复原始图标
-  searchIcon.addEventListener('mouseleave', function() {
-    if (searchInput.classList.contains('expanded')) {
-      showSearchIcon();
+    
+    // 清除搜索结果
+    function clearSearchResults() {
+        // 隐藏搜索结果标题，显示分类内容
+        document.querySelector('.search-result-title')?.classList.add('hidden');
+        document.querySelectorAll('.category-item, .category-title').forEach(el => {
+            el.classList.remove('hidden');
+        });
+        
+        // 找到并隐藏搜索结果容器
+        const resultsContainer = document.querySelector('.search-results');
+        if (resultsContainer) {
+            resultsContainer.classList.add('hidden');
+        }
     }
-  });
-  
-  // 点击页面其他地方时收缩输入框（仅当输入框无内容时）
-  document.addEventListener('click', function(e) {
-    if (!searchContainer.contains(e.target)) {
-      // 只有当输入框没有内容时才关闭
-      if (searchInput.classList.contains('expanded') && !searchInput.value) {
-        searchInput.classList.remove('expanded');
-        updateIcon();
-        // 显示一言和今日诗词
-        if (hitokoto) hitokoto.closest('.nav-item').style.display = '';
-        if (jinrishici) jinrishici.closest('.nav-item').style.display = '';
-        showAllCards(); // 显示所有卡片
-      }
-    }
-  });
-  
-  // 更新图标显示状态的函数
-  function updateIcon() {
-    if (!searchInput.classList.contains('expanded')) {
-      // 输入框未展开时显示搜索图标
-      showSearchIcon();
+    
+    // 输入事件处理
+    searchInput.addEventListener('input', function() {
+        const query = this.value.trim();
+        
+        // 显示/隐藏清除按钮
+        if (query) {
+            searchIconSvg.classList.add('d-none');
+            clearIconSvg.classList.remove('d-none');
+        } else {
+            searchIconSvg.classList.remove('d-none');
+            clearIconSvg.classList.add('d-none');
+            closeIconSvg.classList.add('d-none');
+            clearSearchResults();
+        }
+        
+        // 清除之前的定时器
+        if (debounceTimer) {
+            clearTimeout(debounceTimer);
+        }
+        
+        // 设置新的定时器（300ms 停顿后执行搜索）
+        debounceTimer = setTimeout(() => {
+            executeSearch(query);
+        }, 300);
+    });
+    
+    // 搜索按钮点击事件
+    searchIcon.addEventListener('click', function() {
+        const query = searchInput.value.trim();
+        if (query) {
+            executeSearch(query);
+        } else {
+            clearSearchResults();
+        }
+    });
+    
+    // 清除按钮点击事件
+    clearIconSvg.addEventListener('click', function(e) {
+        e.stopPropagation();
+        searchInput.value = '';
+        searchIconSvg.classList.remove('d-none');
+        clearIconSvg.classList.add('d-none');
+        closeIconSvg.classList.add('d-none');
+        clearSearchResults();
+        searchInput.focus();
+    });
+    
+    // 关闭按钮点击事件
+    closeIconSvg.addEventListener('click', function(e) {
+        e.stopPropagation();
+        clearSearchResults();
+    });
+    
+    // 回车和 Ctrl+ 回车事件
+    searchInput.addEventListener('keydown', function(e) {
+        // 回车键
+        if (e.key === 'Enter' && !e.ctrlKey) {
+            e.preventDefault();
+            executeSearch(this.value.trim());
+        }
+        
+        // Ctrl+ 回车键
+        if (e.key === 'Enter' && e.ctrlKey) {
+            e.preventDefault();
+            const query = this.value.trim();
+            if (query) {
+                window.open(`https://www.google.com/search?q=${encodeURIComponent(query)}`, '_blank');
+            }
+        }
+    });
+});
+
+// Google 搜索功能
+function googleSearch() {
+    const searchInput = document.getElementById('search-input');
+    const query = searchInput.value.trim();
+    if (query) {
+        window.open(`https://www.google.com/search?q=${encodeURIComponent(query)}`, '_blank');
     } else {
-      // 输入框展开时根据内容显示图标
-      if (searchInput.value) {
-        showClearIcon();
-      } else {
-        showCloseIcon();
-      }
+        // 当输入框为空时，直接跳转到 Google 首页
+        window.open('https://www.google.com', '_blank');
     }
-  }
-  
-  // 显示搜索图标
-  function showSearchIcon() {
-    searchIconSvg.classList.remove('d-none');
-    clearIconSvg.classList.add('d-none');
-    closeIconSvg.classList.add('d-none');
-  }
-  
-  // 显示清除图标
-  function showClearIcon() {
-    searchIconSvg.classList.add('d-none');
-    clearIconSvg.classList.remove('d-none');
-    closeIconSvg.classList.add('d-none');
-  }
-  
-  // 显示关闭图标
-  function showCloseIcon() {
-    searchIconSvg.classList.add('d-none');
-    clearIconSvg.classList.add('d-none');
-    closeIconSvg.classList.remove('d-none');
-  }
+}
+
+// 修改 Ctrl+Enter 行为
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('search-input');
+    searchInput.addEventListener('keydown', function(e) {
+        // Ctrl+ 回车键
+        if (e.key === 'Enter' && e.ctrlKey) {
+            e.preventDefault();
+            const query = this.value.trim();
+            if (query) {
+                window.open(`https://www.google.com/search?q=${encodeURIComponent(query)}`, '_blank');
+            } else {
+                // 当输入框为空时，直接跳转到 Google 首页
+                window.open('https://www.google.com', '_blank');
+            }
+        }
+    });
 });
 </script>
+
 </body>
 </html>
