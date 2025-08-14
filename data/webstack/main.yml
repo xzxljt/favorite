@@ -14,42 +14,18 @@ links:
     logo: gmail.svg
     url: https://mail.google.com
     description: Secure, smart, and easy to use email
-  - title: Deepseek DS
-    logo: deepseek.png
-    url: https://chat.deepseek.com/
-    description: 深度求索 探索未至之境
-  - title: 腾讯元宝
-    logo: yuanbao.svg
-    url: https://yuanbao.tencent.com/chat
-    description: 轻松工作 多点生活
-  - title: 飞牛私有云 NASfnOS
+  - title: 飞牛 NAS fnOS
     logo: fnOS.png
     url: https://nas.eallion.com
     description: NAS fnOS Cloudflared
-  - title: Twitter 𝕏
-    logo: x.svg
-    url: https://x.com/eallion
-    description: Blaze your glory!
-  - title: Youtube
-    logo: youtube.svg
-    url: https://www.youtube.com/
-    description: Boardcast Yourself
-  - title: 哔哩哔哩 Bilibili
-    logo: bilibili.svg
-    url: https://www.bilibili.com/
-    description: 你感兴趣的视频都在 B 站
-  - title: Reddit
-    logo: reddit.svg
-    url: https://www.reddit.com/user/eallion/
-    description: Heart of the internet
-  - title: 抖音 Douyin
-    logo: tiktok.svg
-    url: https://www.douyin.com/
-    description: 记录美好生活
-  - title: 小红书 xhs
-    logo: xhs.png
-    url: https://www.xiaohongshu.com
-    description: 你的生活指南
+  - title: Deepseek
+    logo: deepseek.svg
+    url: https://chat.deepseek.com/
+    description: 深度求索 探索未至之境
+  - title: Google Gemini
+    logo: gemini.svg
+    url: https://gemini.google.com/
+    description: 你的私人 AI 助理
   - title: GitHub
     logo: github.svg
     url: https://github.com/eallion
@@ -62,39 +38,63 @@ links:
     logo: vercel.svg
     url: https://vercel.com
     description: Build and deploy the best web experiences with the Frontend Cloud
-  - title: 阿里云 Aliyun
+  - title: 阿里云
     logo: aliyun.svg
     url: https://www.aliyun.com/
     description: 计算，为了无法计算的价值
-  - title: 腾讯云 Tencent
+  - title: 腾讯云
     logo: tencentcloud.svg
     url: https://cloud.tencent.com/
     description: 产业智变·云启未来
-  - title: Dropbox
-    logo: dropbox.svg
-    url: https://www.dropbox.com/
-    description: For all things worth saving
-  - title: 京东 (JD.COM)
+  - title: 多吉云
+    logo: dogecloud.png
+    url: https://www.dogecloud.com/?iuid=5123
+    description: 一站式视频云点播平台，轻量级的用户能够无需了解任何技术就轻而易举地展示和播放视频，而以视频为主要产品的用户能通过强大的 API 和 SDK 完成对视频的高级处理。
+  - title: Twitter 𝕏
+    logo: x.svg
+    url: https://x.com/eallion
+    description: Blaze your glory!
+  - title: Youtube
+    logo: youtube.svg
+    url: https://www.youtube.com/
+    description: Boardcast Yourself
+  - title: 哔哩哔哩
+    logo: bilibili.svg
+    url: https://www.bilibili.com/
+    description: 你感兴趣的视频都在 B 站
+  - title: Reddit
+    logo: reddit.svg
+    url: https://www.reddit.com/user/eallion/
+    description: Heart of the internet
+  - title: 抖音
+    logo: tiktok.svg
+    url: https://www.douyin.com/
+    description: 记录美好生活
+  - title: 小红书
+    logo: xhs.png
+    url: https://www.xiaohongshu.com
+    description: 你的生活指南
+  - title: 京东
     logo: jingdong.png
     url: https://www.jd.com
     description: 正品低价、品质保障、配送及时、轻松购物！
-  - title: 酷白菜 Kubaicai
+  - title: 酷白菜
     logo: kubaicai.png
     url: https://www.kubaicai.com/?r=/l/ddlist
     description: 每天千款优惠券秒杀，一折限时疯抢！
-  - title: 什么值得买 smzdm
+  - title: 什么值得买
     logo: smzdm.svg
     url: https://www.smzdm.com/
     description: 科学消费 认真生活
-  - title: 淘宝 TB
+  - title: 淘宝
     logo: taobao.webp
     url: https://www.taobao.com
     description: 亚洲较大的网上交易平台
-  - title: 拼多多 PDD
+  - title: 拼多多
     logo: pinduoduo.png
     url: https://mobile.yangkeduo.com/
     description: 风靡全国的拼团商城，优质商品新鲜直供，快来一起拼多多吧
-  - title: 小米有品 Youpin
+  - title: 小米有品
     logo: youpin.png
     url: https://www.xiaomiyoupin.com/
     description: 小米旗下精品生活电商平台
@@ -118,6 +118,18 @@ links:
     logo: pinduoduo.png
     url: https://jinbao.pinduoduo.com/
     description: 大量高佣金、多优惠券商品在这里等你，可以随时随地登录该网站推广商品赚钱，商品优惠券多、佣金高，让您轻松赚钱！
+  - title: Docker Status
+    logo: docker-status.svg
+    url: https://status.1panel.top/status/docker
+    description: 国内 Docker 服务状态 & 镜像加速监控
+  - title: Dropbox
+    logo: dropbox.svg
+    url: https://www.dropbox.com/
+    description: For all things worth saving
+  - title: 腾讯元宝
+    logo: yuanbao.svg
+    url: https://yuanbao.tencent.com/chat
+    description: 轻松工作 多点生活
   - title: 汇率
     logo: currency.svg
     url: https://currency.eallion.com/
@@ -134,7 +146,3 @@ links:
     logo: pingtu.png
     url: https://kejiweixun.com/tools/merge-images
     description: 图片拼接：长图拼接，把多张图片合并成一张，支持纵向或横向拼接图片，还能添加水印。该工具完全离线运行，手机建议使用微信小程序“拼长图”。
-  - title: Docker Status
-    logo: docker-status.svg
-    url: https://status.1panel.top/status/docker
-    description: 国内 Docker 服务状态 & 镜像加速监控

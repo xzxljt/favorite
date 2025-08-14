@@ -9,7 +9,7 @@
   "scripts": {
     "build": "hugo",
     "create": "hugo new",
-    "serve": "hugo server"
+    "server": "hugo server -w -D --bind 0.0.0.0 --minify"
   },
   "repository": {
     "type": "git",
