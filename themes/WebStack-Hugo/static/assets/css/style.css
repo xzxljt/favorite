@@ -69,7 +69,7 @@ a img.aligncenter{display:block;margin-left:auto;margin-right:auto}
 .sidebar-item.sidebar-show ul{display:block}
 .sidebar-item ul li{display:block}
 .sidebar-menu-inner ul li ul li a{margin-left:36px} 
-.sidebar-more{float:right;margin-right:24px;line-height:50px!important;transition:transform .3s}
+.sidebar-more{margin-left:24px;line-height:40px!important;transition:transform .3s}
 .sidebar-item .label-Primary{float:right;margin-right:24px}
 a>i.sidebar-more{transform:scale(.8)}
 .sidebar-show>a>i.sidebar-more{transform:scale(.8) rotate(90deg)}

@@ -77,7 +77,7 @@ var theme = {"ajaxurl":"","addico":"https:\/\/nav.baidu.cn\/wp-content\/themes\/
 <script>
     // Mastodon 滚动 Ticker
     // 远程 JSON API 地址
-    let jsonUrl = "https://www.eallion.com/api/v1/accounts/111136231674527355/statuses?limit=10&exclude_replies=true&exclude_reblogs=true";
+    let jsonUrl = "https://e5n.cc/api/v1/accounts/111136231674527355/statuses?limit=10&exclude_replies=true&exclude_reblogs=false&max_id=114996910788879630";
 
     // 相对时间插件 2.5.2 https://tokinx.github.io/lately/
     (() => {
@@ -135,10 +135,20 @@ var theme = {"ajaxurl":"","addico":"https:\/\/nav.baidu.cn\/wp-content\/themes\/
                 for (var i = 0; i < data.length; i++) { // 将 i 初始化为 0
                     var tickerUrl = data[i].url;
                     var tickerTime = new Date(data[i].created_at).toLocaleString();
-                    var tickerContent = getSimpleText(data[i].content)
-                    // 添加条件判断，当 i 等于 0 时，添加 'carousel-item active' 类
-                    var className = i === 0 ? 'carousel-item active' : 'carousel-item';
-                    result += `<div class="${className}"><a class="overflowClip_1" href="${tickerUrl}" target="_blank" rel="bulletin"><span class="datetime">${tickerTime}</span>:  ${tickerContent}</a></div>`;
+                    // 修改逻辑：检查是否为转嘟文
+                    if (data[i].reblog && Object.keys(data[i].reblog).length > 0) {
+                        // 如果是转嘟文，使用原嘟文的内容
+                        var tickerContent = getSimpleText(data[i].reblog.content);
+                        // 添加条件判断，当 i 等于 0 时，添加 'carousel-item active' 类
+                        var className = i === 0 ? 'carousel-item active' : 'carousel-item';
+                        result += `<div class="${className}"><a class="overflowClip_1" href="${tickerUrl}" target="_blank" rel="bulletin"><span class="datetime">${tickerTime}</span>:  【转】${tickerContent}</a></div>`;
+                    } else {
+                        // 如果不是转嘟文，使用现有逻辑
+                        var tickerContent = getSimpleText(data[i].content);
+                        // 添加条件判断，当 i 等于 0 时，添加 'carousel-item active' 类
+                        var className = i === 0 ? 'carousel-item active' : 'carousel-item';
+                        result += `<div class="${className}"><a class="overflowClip_1" href="${tickerUrl}" target="_blank" rel="bulletin"><span class="datetime">${tickerTime}</span>:  ${tickerContent}</a></div>`;
+                    }
                 }
                 var tickerDom = document.querySelector('#ticker');
                 tickerDom.innerHTML = result;
@@ -159,25 +169,31 @@ var theme = {"ajaxurl":"","addico":"https:\/\/nav.baidu.cn\/wp-content\/themes\/
 </script>
 
 <script>
-//夜间 (日间) 模式
+//夜间 (日间) 模式 - 基于系统偏好自动加载
 (function(){
-    if(document.cookie.replace(/(?:(?:^|.*;\s*)night\s*\=\s*([^;]*).*$)|^.*$/, "$1") === ''){
-        if(new Date().getHours() > 22 || new Date().getHours() < 6){
-            document.body.classList.remove('io-black-mode');
-            document.body.classList.add('io-grey-mode');
+    // 检查 cookie 是否存在
+    var night = document.cookie.replace(/(?:(?:^|.*;\s*)night\s*\=\s*([^;]*).*$)|^.*$/, "$1");
+    
+    // 如果 cookie 不存在，根据系统偏好设置
+    if(night === ''){
+        // 检查用户系统是否偏好暗色模式
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches){
+            document.body.classList.add('io-black-mode');
             document.cookie = "night=1;path=/";
-            console.log('夜间模式开启');
+            console.log('检测到系统暗色偏好，自动开启暗黑模式');
         }else{
-            document.body.classList.remove('night');
+            document.body.classList.add('io-grey-mode');
             document.cookie = "night=0;path=/";
-            console.log('夜间模式关闭');
+            console.log('检测到系统亮色偏好，使用亮色模式');
         }
     }else{
-        var night = document.cookie.replace(/(?:(?:^|.*;\s*)night\s*\=\s*([^;]*).*$)|^.*$/, "$1") || '0';
+        // 如果 cookie 存在，使用 cookie 的值
         if(night == '0'){
-            document.body.classList.remove('night');
+            document.body.classList.remove('io-black-mode');
+            document.body.classList.add('io-grey-mode');
         }else if(night == '1'){
-            document.body.classList.add('night');
+            document.body.classList.add('io-black-mode');
+            document.body.classList.remove('io-grey-mode');
         }
     }
 })();
