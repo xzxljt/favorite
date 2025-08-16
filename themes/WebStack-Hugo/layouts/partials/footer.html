@@ -20,7 +20,11 @@ var theme = {"ajaxurl":"","addico":"https:\/\/nav.baidu.cn\/wp-content\/themes\/
 
 <script>
     var lazyLoadInstance = new LazyLoad({
-  // Your custom settings go here
+        elements_selector: ".lazy",
+        data_src: "src",
+        callback_error: (img) => {
+            img.setAttribute("src", "assets/images/faviconV2.png");
+        }
     });
 </script>
 
