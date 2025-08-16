@@ -444,52 +444,141 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // 回车和 Ctrl+ 回车事件
     searchInput.addEventListener('keydown', function(e) {
-        // 回车键
-        if (e.key === 'Enter' && !e.ctrlKey) {
+        // 普通回车键 - 站内搜索
+        if (e.key === 'Enter' && !e.ctrlKey && !e.altKey) {
             e.preventDefault();
             executeSearch(this.value.trim());
         }
-        
-        // Ctrl+ 回车键
+            
+        // 同时处理 Ctrl+Enter 和 Ctrl+Shift+Enter
         if (e.key === 'Enter' && e.ctrlKey) {
             e.preventDefault();
             const query = this.value.trim();
             if (query) {
-                window.open(`https://www.google.com/search?q=${encodeURIComponent(query)}`, '_blank');
+                const url = `https://www.google.com/search?q=${encodeURIComponent(query)}`;
+                const newWindow = window.open(url, '_blank');
+                if (newWindow) {
+                    // 尝试聚焦新标签页。
+                    // 注意：在某些浏览器上，Ctrl+Enter 可能仍无法聚焦。
+                    // 但 Ctrl+Shift+Enter 通常可以。
+                    newWindow.focus();
+                }
             }
+        }
+        
+        // Alt+ 回车键 - 百度搜索并在前台打开新标签
+        if (e.key === 'Enter' && e.altKey) {
+            e.preventDefault();
+            const query = this.value.trim();
+            if (query) {
+                // 使用更明确的方式打开新标签页
+                const url = `https://www.baidu.com/s?wd=${encodeURIComponent(query)}`;
+                const newWindow = window.open(url, '_blank');
+                if (newWindow) {
+                    newWindow.focus();
+                }
+            }
+        }
+
+        // Delete 键 - 清除输入框内容
+        if (e.key === 'Delete') {
+            e.preventDefault();
+            this.value = '';
+            searchIconSvg.classList.remove('d-none');
+            clearIconSvg.classList.add('d-none');
+            closeIconSvg.classList.add('d-none');
+            clearSearchResults();
+            this.focus();
         }
     });
 });
 
-// Google 搜索功能
-function googleSearch() {
+// 点击 Google 图标搜索功能
+function openGoogleSearch() {
     const searchInput = document.getElementById('search-input');
     const query = searchInput.value.trim();
-    if (query) {
-        window.open(`https://www.google.com/search?q=${encodeURIComponent(query)}`, '_blank');
-    } else {
-        // 当输入框为空时，直接跳转到 Google 首页
-        window.open('https://www.google.com', '_blank');
+    const url = query 
+        ? `https://www.google.com/search?q=${encodeURIComponent(query)}` 
+        : 'https://www.google.com';
+    
+    const newWindow = window.open(url, '_blank');
+    if (newWindow) {
+        newWindow.focus();
     }
 }
 
-// 修改 Ctrl+Enter 行为
+// 添加全局键盘监听器
 document.addEventListener('DOMContentLoaded', function() {
-    const searchInput = document.getElementById('search-input');
-    searchInput.addEventListener('keydown', function(e) {
-        // Ctrl+ 回车键
-        if (e.key === 'Enter' && e.ctrlKey) {
-            e.preventDefault();
-            const query = this.value.trim();
-            if (query) {
-                window.open(`https://www.google.com/search?q=${encodeURIComponent(query)}`, '_blank');
-            } else {
-                // 当输入框为空时，直接跳转到 Google 首页
-                window.open('https://www.google.com', '_blank');
-            }
+    let isComposing = false; // 用于跟踪是否正在输入法组合中
+    
+    // 监听输入法组合事件
+    document.addEventListener('compositionstart', function(e) {
+        isComposing = true;
+    });
+    
+    document.addEventListener('compositionend', function(e) {
+        isComposing = false;
+        // 输入法组合结束后，确保焦点在搜索框中
+        const searchInput = document.getElementById('search-input');
+        if (searchInput && document.activeElement !== searchInput) {
+            searchInput.focus();
+        }
+    });
+    
+    // 监听键盘按键
+    document.addEventListener('keydown', function(e) {
+        const searchInput = document.getElementById('search-input');
+        
+        // 如果搜索框已经聚焦，不处理
+        if (!searchInput || document.activeElement === searchInput) {
+            return;
+        }
+        
+        // 如果正在输入法组合中，不处理
+        if (isComposing) {
+            return;
+        }
+        
+        // 忽略特殊键（功能键、控制键等）
+        if (e.ctrlKey || e.altKey || e.metaKey) {
+            return;
+        }
+        
+        // 忽略不需要处理的按键
+        const ignoredKeys = [
+            'Shift', 'Control', 'Alt', 'Meta', 'CapsLock', 'Tab', 
+            'Escape', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight',
+            'F1', 'F2', 'F3', 'F4', 'F5', 'F6', 'F7', 'F8', 'F9', 'F10', 'F11', 'F12',
+            'Backspace', 'Delete', 'Enter', 'PageUp', 'PageDown', 'Home', 'End',
+            'Insert', 'ContextMenu', 'NumLock', 'ScrollLock', 'Pause'
+        ];
+        
+        if (ignoredKeys.includes(e.key)) {
+            return;
+        }
+        
+        // 激活搜索框并处理字符输入
+        e.preventDefault();
+        searchInput.focus();
+        searchInput.scrollIntoView({ 
+            behavior: 'smooth', 
+            block: 'center'
+        });
+        
+        // 如果是可打印字符，插入到输入框中
+        if (e.key.length === 1) {
+            const startPos = searchInput.value.length;
+            searchInput.value = searchInput.value + e.key;
+            // 设置光标位置到末尾
+            searchInput.setSelectionRange(startPos + 1, startPos + 1);
+            
+            // 触发 input 事件以便执行搜索
+            const inputEvent = new Event('input', { bubbles: true });
+            searchInput.dispatchEvent(inputEvent);
         }
     });
 });
+
 </script>
 
 </body>
