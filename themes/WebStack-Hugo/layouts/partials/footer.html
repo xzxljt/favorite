@@ -89,92 +89,90 @@ var theme = {"ajaxurl":"","addico":"https:\/\/nav.baidu.cn\/wp-content\/themes\/
     // 远程 JSON API 地址
     let jsonUrl = "https://www.eallion.com/api/v1/accounts/111136231674527355/statuses?limit=10&exclude_replies=true&exclude_reblogs=false";
 
-    // 相对时间插件 2.5.2 https://tokinx.github.io/lately/
-    (() => {
-        window.Lately = new function () {
-            this.lang = {
-                second: " 秒",
-                minute: " 分钟",
-                hour: " 小时",
-                day: " 天",
-                month: " 个月",
-                year: " 年",
-                ago: "前",
-                error: "NaN"
-            };
-            const format = (date) => {
-                date = new Date(_val(date));
-                const floor = (num, _lang) => Math.floor(num) + _lang,
-                    obj = new function () {
-                        this.second = (Date.now() - date.getTime()) / 1000;
-                        this.minute = this.second / 60;
-                        this.hour = this.minute / 60;
-                        this.day = this.hour / 24;
-                        this.month = this.day / 30;
-                        this.year = this.month / 12
-                    },
-                    key = Object.keys(obj).reverse().find(_ => obj[_] >= 1);
-                return (key ? floor(obj[key], this.lang[key]) : this.lang.error) + this.lang.ago;
-            },
-                _val = (date) => {
-                    date = new Date(date && (typeof date === 'number' ? date : date.replace(/-/g, '/').replace('T', ' ')));
-                    return isNaN(date.getTime()) ? false : date.getTime();
-                };
-            return {
-                init: ({ target = "time", lang } = {}) => {
-                    if (lang) this.lang = lang;
-                    for (let el of document.querySelectorAll(target)) {
-                        const date = _val(el.dateTime) || _val(el.title) || _val(el.innerHTML) || 0;
-                        if (!date) return;
-                        el.title = new Date(date).toLocaleString();
-                        el.innerHTML = format(date);
-                    }
-                },
-                format
-            }
-        }
-    })();
-
     // 处理 Json 数据
     if (document.querySelector('#ticker')) {
         fetch(jsonUrl)
             .then(res => res.json())
-            .then(res => {
-                var result = '';
-                var data = res;
-                for (var i = 0; i < data.length; i++) { // 将 i 初始化为 0
-                    var tickerUrl = data[i].url;
-                    var tickerTime = new Date(data[i].created_at).toLocaleString();
-                    // 修改逻辑：检查是否为转嘟文
-                    if (data[i].reblog && Object.keys(data[i].reblog).length > 0) {
-                        // 如果是转嘟文，使用原嘟文的内容
-                        var tickerContent = getSimpleText(data[i].reblog.content);
-                        // 添加条件判断，当 i 等于 0 时，添加 'carousel-item active' 类
-                        var className = i === 0 ? 'carousel-item active' : 'carousel-item';
-                        result += `<div class="${className}"><a class="overflowClip_1" href="${tickerUrl}" target="_blank" rel="bulletin"><span class="datetime">${tickerTime}</span>:  【转】${tickerContent}</a></div>`;
-                    } else {
-                        // 如果不是转嘟文，使用现有逻辑
-                        var tickerContent = getSimpleText(data[i].content);
-                        // 添加条件判断，当 i 等于 0 时，添加 'carousel-item active' 类
-                        var className = i === 0 ? 'carousel-item active' : 'carousel-item';
-                        result += `<div class="${className}"><a class="overflowClip_1" href="${tickerUrl}" target="_blank" rel="bulletin"><span class="datetime">${tickerTime}</span>:  ${tickerContent}</a></div>`;
-                    }
-                }
-                var tickerDom = document.querySelector('#ticker');
-                tickerDom.innerHTML = result;
+            .then(data => {
+                const tickerDom = document.querySelector('#ticker');
+                if (!tickerDom) return;
 
-                // 相对时间插件
-                window.Lately && Lately.init({
-                    target: '.datetime'
-                });
+                // 使用 map 和 join 优化 DOM 操作
+                const htmlItems = data.map((item, i) => {
+                    const tickerUrl = item.url;
+                    const tickerTime = getRelativeTime(new Date(item?.created_at)) || '未知时间';
+                    
+                    // 统一处理内容，避免重复代码
+                    const content = item.reblog && Object.keys(item.reblog).length > 0 
+                        ? extractTextFromHtml(item.reblog.content) 
+                        : extractTextFromHtml(item.content);
+                    
+                    const isReblog = item.reblog && Object.keys(item.reblog).length > 0;
+                    const prefix = isReblog ? '【转】' : '';
+                    const className = i === 0 ? 'carousel-item active' : 'carousel-item';
+                    
+                    return `<div class="${className}"><a class="overflowClip_1" href="${tickerUrl}" target="_blank" rel="bulletin"><span class="datetime">${tickerTime}</span>:  ${prefix}${content}</a></div>`;
+                }).join('');
+
+                tickerDom.innerHTML = htmlItems;
+            })
+            .catch(error => {
+                console.error('Error fetching ticker data:', error);
             });
     }
 
-    // 提取 HTML 代码中的纯文本内容
-    function getSimpleText(html) {
-        var htmlTags = new RegExp("<.+?>", "g");
-        var simpleText = html.replace(htmlTags, '');
-        return simpleText.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    // 提取 HTML 代码中的纯文本内容并替换特殊字符
+    function extractTextFromHtml(html) {
+        // 首先使用 DOMParser 方法，这是最准确的方式
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, 'text/html');
+        let text = doc.body.textContent || '';
+        
+        // 转义 HTML 实体以防止 XSS
+        text = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        
+        // 替换特殊字符
+        const replacements = {
+            '\\s*:star_empty:\\s*': '🌑',
+            '\\s*:star_half:\\s*': '🌗',
+            '\\s*:star_solid:\\s*': '🌕'
+        };
+        
+        for (const pattern in replacements) {
+            const regex = new RegExp(pattern, 'g');
+            text = text.replace(regex, replacements[pattern]);
+        }
+        
+        return text;
+    }
+
+    // 计算相对时间的函数
+    function getRelativeTime(date) {
+        const rtf = new Intl.RelativeTimeFormat('zh-CN', { numeric: "auto", style: 'short' });
+
+        const now = new Date();
+        const diff = now - date;
+
+        const seconds = Math.floor(diff / 1000);
+        const minutes = Math.floor(seconds / 60);
+        const hours = Math.floor(minutes / 60);
+        const days = Math.floor(hours / 24);
+        const months = Math.floor(days / 30);
+        const years = Math.floor(days / 365);
+
+        if (years > 0) {
+        return rtf.format(-years, 'year');
+        } else if (months > 0) {
+        return rtf.format(-months, 'month');
+        } else if (days > 0) {
+        return rtf.format(-days, 'day');
+        } else if (hours > 0) {
+        return rtf.format(-hours, 'hour');
+        } else if (minutes > 0) {
+        return rtf.format(-minutes, 'minute');
+        } else {
+        return rtf.format(-seconds, 'second');
+        }
     }
 </script>
 
