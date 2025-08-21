@@ -5,7 +5,6 @@
 var theme = {"ajaxurl":"","addico":"https:\/\/nav.baidu.cn\/wp-content\/themes\/onenav\/images\/add.png","order":"asc","formpostion":"top","defaultclass":"io-grey-mode","isCustomize":"1","icourl":"","icopng":".png","urlformat":"1","customizemax":"10","newWindow":"0","lazyload":"1","minNav":"1","loading":"1","hotWords":"baidu","classColumns":" col-sm-6 col-md-4 col-xl-5a col-xxl-6a ","apikey":"TWpBeU1UVTNOekk1TWpVMEIvZ1M2bFVIQllUMmxsV1dZelkxQTVPVzB3UW04eldGQmxhM3BNWW14bVNtWk4="};
 /* ]]> */
 </script>
-<!-- 结束 -->
 <script type='text/javascript' src='{{ relURL "assets/js/popper.min.js" }}?v=1.16.1' id='popper-js'></script>
 <script type='text/javascript' src='{{ relURL "assets/js/bootstrap.min.js" }}?v=4.6.2' id='bootstrap-js'></script>
 <script type='text/javascript' src='{{ relURL "assets/js/theia-sticky-sidebar.min.js" }}?v=1.7.0' id='sidebar-js'></script>
@@ -19,63 +18,118 @@ var theme = {"ajaxurl":"","addico":"https:\/\/nav.baidu.cn\/wp-content\/themes\/
 <script type='text/javascript' src='{{ relURL "assets/js/fuse.min.js?v7.1.0" }}' id='fuse-js'></script>
 
 <script>
+    // 实例化 LazyLoad
     var lazyLoadInstance = new LazyLoad({
         elements_selector: ".lazy",
-        data_src: "src",
+        data_src: "src", // 如果你 HTML 中是 data-src="xxx",这里可以不写，因为这是默认值
         threshold: 300,
         callback_error: (img) => {
             img.setAttribute("src", "assets/images/faviconV2.png");
         }
     });
-</script>
 
-<script type="text/javascript">
     $(document).ready(function(){
         var siteWelcome = $('#loading');
         siteWelcome.addClass('close');
         setTimeout(function() {
             siteWelcome.remove();
         }, 600);
-    });
-</script>
 
-<script>
-    $(document).ready(function(){
-        setTimeout(function () {
-            if ($('a.smooth[href="' + window.location.hash + '"]')[0]) {
-                $('a.smooth[href="' + window.location.hash + '"]').click();
-            }else if (window.location.hash != '') {
-                $("html, body").animate({
-                    scrollTop: $(window.location.hash).offset().top - 90
-                }, {
-                    duration: 500,
-                    easing: "swing",
-                    complete: function() {
-                        // 滚动完成后更新 LazyLoad
-                        if (lazyLoadInstance) {
-                            lazyLoadInstance.update();
-                        }
-                    }
-                });
+        // 页面加载完成后，立即更新懒加载实例以确保首屏内容加载
+        setTimeout(function() {
+            if (lazyLoadInstance) {
+                lazyLoadInstance.update();
             }
         }, 300);
+    });
+
+    // 监听锚点跳转和页面初始化时的 URL hash
+    $(document).ready(function(){
+        // 页面加载完成后处理 URL hash
+        setTimeout(function () {
+            if (window.location.hash) {
+                const targetId = window.location.hash;
+                const targetElement = $(targetId);
+                if (targetElement.length) {
+                    // 滚动前销毁 lazyload 实例
+                    if (lazyLoadInstance) {
+                        lazyLoadInstance.destroy();
+                    }
+
+                    $("html, body").animate({
+                        scrollTop: targetElement.offset().top - 90
+                    }, {
+                        duration: 500,
+                        easing: "swing",
+                        complete: function() {
+                            // 滚动完成后手动加载目标区域的图片
+                            const imagesToLoad = targetElement.find('.lazy');
+                            imagesToLoad.each(function() {
+                                const element = $(this);
+                                if (element.attr('data-src')) {
+                                    element.attr('src', element.attr('data-src'));
+                                    element.removeAttr('data-src');
+                                }
+                            });
+                            
+                            // 重新实例化 LazyLoad，以便后续的滚动继续工作
+                            lazyLoadInstance = new LazyLoad({
+                                elements_selector: ".lazy",
+                                data_src: "src",
+                                threshold: 300,
+                                callback_error: (img) => {
+                                    img.setAttribute("src", "assets/images/faviconV2.png");
+                                }
+                            });
+                        }
+                    });
+                }
+            }
+        }, 300);
+
+        // 监听锚点跳转事件
         $(document).on('click','a.smooth',function(ev) {
             if($('#sidebar').hasClass('show') && !$(this).hasClass('change-href')){
                 $('#sidebar').modal('toggle');
             }
             if($(this).attr("href").substr(0, 1) == "#"){
-                $("html, body").animate({
-                    scrollTop: $($(this).attr("href")).offset().top - 90
-                }, {
-                    duration: 500,
-                    easing: "swing",
-                    complete: function() {
-                        // 滚动完成后更新 LazyLoad
-                        if (lazyLoadInstance) {
-                            lazyLoadInstance.update();
-                        }
+                const targetId = $(this).attr("href");
+                const targetElement = $(targetId);
+
+                if (targetElement.length) {
+                    // 滚动前销毁 lazyload 实例
+                    if (lazyLoadInstance) {
+                        lazyLoadInstance.destroy();
                     }
-                });
+
+                    $("html, body").animate({
+                        scrollTop: targetElement.offset().top - 90
+                    }, {
+                        duration: 500,
+                        easing: "swing",
+                        complete: function() {
+                            // 滚动完成后手动加载目标区域的图片
+                            const imagesToLoad = targetElement.find('.lazy');
+                            imagesToLoad.each(function() {
+                                const element = $(this);
+                                if (element.attr('data-src')) {
+                                    element.attr('src', element.attr('data-src'));
+                                    element.removeAttr('data-src');
+                                }
+                            });
+                            
+                            // 重新实例化 LazyLoad，以便后续的滚动继续工作
+                            lazyLoadInstance = new LazyLoad({
+                                elements_selector: ".lazy",
+                                data_src: "src",
+                                threshold: 300,
+                                callback_error: (img) => {
+                                    img.setAttribute("src", "assets/images/faviconV2.png");
+                                }
+                            });
+                        }
+                    });
+                }
             }
             if($(this).hasClass('go-search-btn')){
                 $('#search-text').focus();
@@ -86,6 +140,8 @@ var theme = {"ajaxurl":"","addico":"https:\/\/nav.baidu.cn\/wp-content\/themes\/
                 toTarget(menu.parent().parent(),true,true);
             }
         });
+        
+        // 保留原有的其他点击事件
         $(document).on('click','a.tab-noajax',function(ev) {
             var url = $(this).data('link');
             if(url)
@@ -93,12 +149,11 @@ var theme = {"ajaxurl":"","addico":"https:\/\/nav.baidu.cn\/wp-content\/themes\/
             else
                 $(this).parents('.d-flex.flex-fill.flex-tab').children('.btn-move.tab-move').hide();
         });
-        
     });
 </script>
 
 <script>
-    // Mastodon 滚动 Ticker
+    // Mastodon 滚动 Ticker...
     // 远程 JSON API 地址
     let jsonUrl = "https://e5n.cc/api/v1/accounts/111136231674527355/statuses?limit=10&exclude_replies=true&exclude_reblogs=false";
 
@@ -110,12 +165,10 @@ var theme = {"ajaxurl":"","addico":"https:\/\/nav.baidu.cn\/wp-content\/themes\/
                 const tickerDom = document.querySelector('#ticker');
                 if (!tickerDom) return;
 
-                // 使用 map 和 join 优化 DOM 操作
                 const htmlItems = data.map((item, i) => {
                     const tickerUrl = item.url;
                     const tickerTime = getRelativeTime(new Date(item?.created_at)) || '未知时间';
                     
-                    // 统一处理内容，避免重复代码
                     const content = item.reblog && Object.keys(item.reblog).length > 0 
                         ? extractTextFromHtml(item.reblog.content) 
                         : extractTextFromHtml(item.content);
@@ -136,15 +189,12 @@ var theme = {"ajaxurl":"","addico":"https:\/\/nav.baidu.cn\/wp-content\/themes\/
 
     // 提取 HTML 代码中的纯文本内容并替换特殊字符
     function extractTextFromHtml(html) {
-        // 首先使用 DOMParser 方法，这是最准确的方式
         const parser = new DOMParser();
         const doc = parser.parseFromString(html, 'text/html');
         let text = doc.body.textContent || '';
         
-        // 转义 HTML 实体以防止 XSS
         text = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
         
-        // 替换特殊字符
         const replacements = {
             '\\s*:star_empty:\\s*': '🌑',
             '\\s*:star_half:\\s*': '🌗',
@@ -192,24 +242,17 @@ var theme = {"ajaxurl":"","addico":"https:\/\/nav.baidu.cn\/wp-content\/themes\/
 <script>
 // 暗黑模式切换功能
 $(document).ready(function() {
-    // Check OS preference for dark mode
     const prefersDarkMode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-    
-    // Get user's saved preference from localStorage
     const savedMode = localStorage.getItem('darkmode');
     
-    // Set initial mode based on OS preference or saved preference
     if (prefersDarkMode || savedMode === 'dark') {
         $('body').removeClass('io-grey-mode').addClass('io-black-mode');
         $('#darkmode-toggle i').removeClass('icon-light').addClass('icon-night');
-        // 设置深色背景图
         $("#search-bg").css("background-image", "url({{ $.Site.Params.images.searchImageD }})");
     } else {
-        // 设置浅色背景图
         $("#search-bg").css("background-image", "url({{ $.Site.Params.images.searchImageL }})");
     }
     
-    // Toggle dark mode on button click
     $('#darkmode-toggle').on('click', function(e) {
         e.preventDefault();
         
@@ -217,13 +260,11 @@ $(document).ready(function() {
             $('body').removeClass('io-black-mode').addClass('io-grey-mode');
             $('#darkmode-toggle i').removeClass('icon-night').addClass('icon-light');
             localStorage.setItem('darkmode', 'light');
-            // 切换到浅色背景图
             $("#search-bg").css("background-image", "url({{ $.Site.Params.images.searchImageL }})");
         } else {
             $('body').removeClass('io-grey-mode').addClass('io-black-mode');
             $('#darkmode-toggle i').removeClass('icon-light').addClass('icon-night');
             localStorage.setItem('darkmode', 'dark');
-            // 切换到深色背景图
             $("#search-bg").css("background-image", "url({{ $.Site.Params.images.searchImageD }})");
         }
     });
@@ -239,55 +280,39 @@ document.addEventListener('DOMContentLoaded', function() {
     const clearIconSvg = document.querySelector('.clear-icon-svg');
     const closeIconSvg = document.querySelector('.close-icon-svg');
     
-    // 标志变量
     let fuse = null;
     let searchData = null;
     let debounceTimer = null;
     
-    // 页面加载时直接初始化搜索功能
     initializeSearch();
     
-    // 初始化搜索功能
     function initializeSearch() {
-        // 加载 JSON 数据
         loadSearchData();
     }
     
-    // 加载搜索数据
     function loadSearchData() {
         fetch('/webstack.json')
             .then(response => response.json())
             .then(data => {
-                // 过滤有效的数据项，description 可以为空
                 searchData = data.filter(item => item.title && item.url);
                 
-                // 初始化 Fuse - 针对中文优化的配置
                 const options = {
                     includeScore: true,
-                    threshold: 0.4, // 适度的匹配阈值
+                    threshold: 0.4,
                     location: 0,
-                    distance: 150, // 增加搜索距离
-                    minMatchCharLength: 1, // 最小匹配字符长度设为 1
+                    distance: 150,
+                    minMatchCharLength: 1,
                     keys: [
-                        {
-                            name: 'title',
-                            weight: 0.5
-                        },
-                        {
-                            name: 'description',
-                            weight: 0.3
-                        },
-                        {
-                            name: 'url',
-                            weight: 0.2
-                        }
+                        { name: 'title', weight: 0.5 },
+                        { name: 'description', weight: 0.3 },
+                        { name: 'url', weight: 0.2 }
                     ],
                     shouldSort: true,
                     includeMatches: true,
-                    findAllMatches: true, // 查找所有匹配项
+                    findAllMatches: true,
                     useExtendedSearch: false,
-                    ignoreLocation: true, // 忽略匹配位置
-                    ignoreFieldNorm: true  // 忽略字段标准化
+                    ignoreLocation: true,
+                    ignoreFieldNorm: true
                 };
                 fuse = new Fuse(searchData, options);
             })
@@ -296,41 +321,32 @@ document.addEventListener('DOMContentLoaded', function() {
             });
     }
     
-    // 搜索执行函数
     function executeSearch(query) {
         if (!fuse || !searchData || !query.trim()) {
             clearSearchResults();
             return;
         }
         
-        // 执行搜索，不限制结果数量
         const results = fuse.search(query);
         
-        // 显示搜索结果标题，隐藏分类内容
         document.querySelector('.search-result-title')?.classList.remove('hidden');
         document.querySelectorAll('.category-item, .category-title').forEach(el => {
             el.classList.add('hidden');
         });
         
-        // 渲染搜索结果
         renderSearchResults(results);
     }
     
-    // 渲染搜索结果
     function renderSearchResults(results) {
-        // 找到 content_main.html 中的搜索结果容器
         let resultsContainer = document.querySelector('.search-results');
         if (!resultsContainer) {
-            // 如果找不到，创建一个新的容器
             resultsContainer = document.createElement('div');
             resultsContainer.className = 'search-results mt-4';
             searchInput.closest('.s-search').after(resultsContainer);
         } else {
-            // 移除 hidden 类
             resultsContainer.classList.remove('hidden');
         }
         
-        // 清空容器
         resultsContainer.innerHTML = '';
         
         if (results.length === 0) {
@@ -338,21 +354,18 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
         
-        // 创建结果行
         const row = document.createElement('div');
         row.className = 'row';
         resultsContainer.appendChild(row);
         
-        // 渲染每个结果
         results.forEach(item => {
             const data = item.item;
-            const url = data.url.replace(/`/g, ''); // 移除 URL 中的反引号
+            const url = data.url.replace(/`/g, '');
             const title = data.title;
             const description = data.description || '';
             const logo = data.logo || '';
             const logoUrl = `https://images.eallion.com/directus/files/${logo}`;
             
-            // 创建卡片 HTML
             const cardHtml = `
             <div class="url-card col-6 col-sm-6 col-md-4 col-xl-5a col-xxl-6a">
                 <div class="url-body default">
@@ -378,36 +391,25 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
             `;
             
-            // 将 HTML 添加到行中
             row.insertAdjacentHTML('beforeend', cardHtml);
-            setTimeout(() => {
-                if (lazyLoadInstance) {
-                    lazyLoadInstance.update();
-                }
-            }, 0);
         });
     }
     
-    // 清除搜索结果
     function clearSearchResults() {
-        // 隐藏搜索结果标题，显示分类内容
         document.querySelector('.search-result-title')?.classList.add('hidden');
         document.querySelectorAll('.category-item, .category-title').forEach(el => {
             el.classList.remove('hidden');
         });
         
-        // 找到并隐藏搜索结果容器
         const resultsContainer = document.querySelector('.search-results');
         if (resultsContainer) {
             resultsContainer.classList.add('hidden');
         }
     }
     
-    // 输入事件处理
     searchInput.addEventListener('input', function() {
         const query = this.value.trim();
         
-        // 显示/隐藏清除按钮
         if (query) {
             searchIconSvg.classList.add('d-none');
             clearIconSvg.classList.remove('d-none');
@@ -418,18 +420,15 @@ document.addEventListener('DOMContentLoaded', function() {
             clearSearchResults();
         }
         
-        // 清除之前的定时器
         if (debounceTimer) {
             clearTimeout(debounceTimer);
         }
         
-        // 设置新的定时器（300ms 停顿后执行搜索）
         debounceTimer = setTimeout(() => {
             executeSearch(query);
         }, 300);
     });
     
-    // 搜索按钮点击事件
     searchIcon.addEventListener('click', function() {
         const query = searchInput.value.trim();
         if (query) {
@@ -439,7 +438,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
-    // 清除按钮点击事件
     clearIconSvg.addEventListener('click', function(e) {
         e.stopPropagation();
         searchInput.value = '';
@@ -450,21 +448,17 @@ document.addEventListener('DOMContentLoaded', function() {
         searchInput.focus();
     });
     
-    // 关闭按钮点击事件
     closeIconSvg.addEventListener('click', function(e) {
         e.stopPropagation();
         clearSearchResults();
     });
     
-    // 回车和 Ctrl+ 回车事件
     searchInput.addEventListener('keydown', function(e) {
-        // 普通回车键 - 站内搜索
         if (e.key === 'Enter' && !e.ctrlKey && !e.altKey) {
             e.preventDefault();
             executeSearch(this.value.trim());
         }
             
-        // 同时处理 Ctrl+Enter 和 Ctrl+Shift+Enter
         if (e.key === 'Enter' && e.ctrlKey) {
             e.preventDefault();
             const query = this.value.trim();
@@ -472,20 +466,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 const url = `https://www.google.com/search?q=${encodeURIComponent(query)}`;
                 const newWindow = window.open(url, '_blank');
                 if (newWindow) {
-                    // 尝试聚焦新标签页。
-                    // 注意：在某些浏览器上，Ctrl+Enter 可能仍无法聚焦。
-                    // 但 Ctrl+Shift+Enter 通常可以。
                     newWindow.focus();
                 }
             }
         }
         
-        // Alt+ 回车键 - 百度搜索并在前台打开新标签
         if (e.key === 'Enter' && e.altKey) {
             e.preventDefault();
             const query = this.value.trim();
             if (query) {
-                // 使用更明确的方式打开新标签页
                 const url = `https://www.baidu.com/s?wd=${encodeURIComponent(query)}`;
                 const newWindow = window.open(url, '_blank');
                 if (newWindow) {
@@ -494,7 +483,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
 
-        // Delete 键 - 清除输入框内容
         if (e.key === 'Delete') {
             e.preventDefault();
             this.value = '';
@@ -507,7 +495,6 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
-// 点击 Google 图标搜索功能
 function openGoogleSearch() {
     const searchInput = document.getElementById('search-input');
     const query = searchInput.value.trim();
@@ -521,44 +508,32 @@ function openGoogleSearch() {
     }
 }
 
-// 添加全局键盘监听器
 document.addEventListener('DOMContentLoaded', function() {
-    let isComposing = false; // 用于跟踪是否正在输入法组合中
+    let isComposing = false;
     
-    // 监听输入法组合事件
     document.addEventListener('compositionstart', function(e) {
         isComposing = true;
     });
     
     document.addEventListener('compositionend', function(e) {
         isComposing = false;
-        // 输入法组合结束后，确保焦点在搜索框中
         const searchInput = document.getElementById('search-input');
         if (searchInput && document.activeElement !== searchInput) {
             searchInput.focus();
         }
     });
     
-    // 监听键盘按键
     document.addEventListener('keydown', function(e) {
         const searchInput = document.getElementById('search-input');
         
-        // 如果搜索框已经聚焦，不处理
         if (!searchInput || document.activeElement === searchInput) {
             return;
         }
         
-        // 如果正在输入法组合中，不处理
         if (isComposing) {
             return;
         }
         
-        // 忽略特殊键（功能键、控制键等）
-        if (e.ctrlKey || e.altKey || e.metaKey) {
-            return;
-        }
-        
-        // 忽略不需要处理的按键
         const ignoredKeys = [
             'Shift', 'Control', 'Alt', 'Meta', 'CapsLock', 'Tab', 
             'Escape', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight',
@@ -571,7 +546,6 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
         
-        // 激活搜索框并处理字符输入
         e.preventDefault();
         searchInput.focus();
         searchInput.scrollIntoView({ 
@@ -579,62 +553,15 @@ document.addEventListener('DOMContentLoaded', function() {
             block: 'center'
         });
         
-        // 如果是可打印字符，插入到输入框中
         if (e.key.length === 1) {
             const startPos = searchInput.value.length;
             searchInput.value = searchInput.value + e.key;
-            // 设置光标位置到末尾
             searchInput.setSelectionRange(startPos + 1, startPos + 1);
             
-            // 触发 input 事件以便执行搜索
             const inputEvent = new Event('input', { bubbles: true });
             searchInput.dispatchEvent(inputEvent);
         }
     });
-});
-
-</script>
-
-<script>
-// 添加滚动事件监听，优化 LazyLoad
-let scrollTimer;
-window.addEventListener('scroll', function() {
-    if (scrollTimer) {
-        clearTimeout(scrollTimer);
-    }
-    scrollTimer = setTimeout(function() {
-        if (lazyLoadInstance) {
-            lazyLoadInstance.update();
-        }
-    }, 100);
-});
-
-// 监听锚点跳转
-document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-    anchor.addEventListener('click', function(e) {
-        e.preventDefault();
-        const targetId = this.getAttribute('href');
-        const targetElement = document.querySelector(targetId);
-        if (targetElement) {
-            // 平滑滚动到目标位置
-            targetElement.scrollIntoView({ behavior: 'smooth' });
-            // 手动触发 LazyLoad 更新
-            setTimeout(() => {
-                if (lazyLoadInstance) {
-                    lazyLoadInstance.update();
-                }
-            }, 300); // 延迟 300ms 确保滚动完成
-        }
-    });
-});
-
-// 页面加载完成后更新 LazyLoad
-$(document).ready(function(){
-    setTimeout(function() {
-        if (lazyLoadInstance) {
-            lazyLoadInstance.update();
-        }
-    }, 1000);
 });
 </script>
 
