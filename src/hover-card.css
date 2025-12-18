@@ -6,16 +6,6 @@
   --icon-color: #3b82f6; /* 默认蓝色，可被 CSS 变量覆盖 */
 }
 
-.link-card::before {
-  content: '';
-  position: absolute;
-  pointer-events: none;
-  inset: 0;
-  border-radius: inherit;
-  overflow: hidden;
-  z-index: 1;
-}
-
 .link-card .icon-bg {
   position: absolute;
   inset: 0;

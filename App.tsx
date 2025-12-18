@@ -2365,7 +2365,7 @@ function App() {
           isSelected
             ? 'bg-red-50 dark:bg-red-900/30 border-red-200 dark:border-red-800'
             : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700'
-        } ${isBatchEditMode ? 'cursor-pointer' : ''} ${
+        } ${isBatchEditMode ? 'cursor-pointer' : 'cursor-pointer'} ${
           isDetailedView
             ? 'flex flex-col rounded-2xl border shadow-sm p-4 min-h-[100px] items-start justify-start text-left w-full min-w-0'
             : 'flex items-center justify-between rounded-xl border shadow-sm p-3'
@@ -2374,7 +2374,16 @@ function App() {
           '--icon-color': linkColor.hex,
           '--icon-color-rgb': linkColor.rgb
         } as React.CSSProperties}
-        onClick={() => isBatchEditMode && toggleLinkSelection(link.id)}
+        onClick={(e) => {
+          if (isBatchEditMode) {
+            toggleLinkSelection(link.id);
+          } else {
+            // 阻止右键菜单触发
+            if (e.button === 0) {
+              window.open(link.url, '_blank', 'noopener,noreferrer');
+            }
+          }
+        }}
         onContextMenu={(e) => handleContextMenu(e, link)}
       >
         {/* Icon background for hover effect */}
@@ -2463,6 +2472,7 @@ function App() {
               isDetailedView ? 'flex-col md:flex-row md:gap-4 md:items-center' : 'items-center'
             }`}
             title={isDetailedView ? link.url : (link.description || link.url)} // 详情版视图只显示URL作为tooltip
+            onClick={(e) => e.stopPropagation()} // 阻止事件冒泡到外层div
           >
             {isDetailedView ? (
               <>
