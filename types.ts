@@ -164,18 +164,16 @@ export interface AppConfig {
 }
 
 export const DEFAULT_CATEGORIES: Category[] = [
-  { id: 'common', name: '常用推荐', icon: 'Star' },
-  { id: 'dev', name: '开发工具', icon: 'Code' },
-  { id: 'design', name: '设计资源', icon: 'Palette' },
-  { id: 'read', name: '阅读资讯', icon: 'BookOpen' },
-  { id: 'ent', name: '休闲娱乐', icon: 'Gamepad2' },
-  { id: 'ai', name: '人工智能', icon: 'Bot' },
+  { id: "common", name: "常用推荐", icon: "Star" },
+  { id: "tools","name":"工具","icon":"Folder","isSubcategory":false},
+  { id: "life","name":"生活工具","icon":"Target","parentId":"tools","isSubcategory":true},
+  { id: "network","name":"网络工具","icon":"Wifi","parentId":"tools","isSubcategory":true},
 ];
 
 export const INITIAL_LINKS: LinkItem[] = [
   { id: '17656786301830', title: '博客 Blog', url: 'https://www.eallion.com/', icon: 'https://images.eallion.com/directus/files/e2e21dfb-3e9f-4593-ab3c-85b354711755.png', description: '大大的小蜗牛的个人生活博客', categoryId: 'common', createdAt: 1765678630183, pinned: true, order: 0, iconType: 'customurl', iconConfig: { iconType: 'customurl', customUrl: 'https://images.eallion.com/directus/files/e2e21dfb-3e9f-4593-ab3c-85b354711755.png' }, pinnedOrder: 0 },
   { id: '17656786301832', title: 'Gmail', url: 'https://mail.google.com', icon: 'https://images.eallion.com/directus/files/7f40a208-6943-467b-94ea-be4cdef2b06c.svg', description: 'Secure, smart, and easy to use email', categoryId: 'common', createdAt: 1765678630183, pinned: true, order: 1, iconType: 'customurl', iconConfig: { iconType: 'customurl', customUrl: 'https://images.eallion.com/directus/files/7f40a208-6943-467b-94ea-be4cdef2b06c.svg' }, pinnedOrder: 1 },
-  { id: '1765695429252', title: 'Gemini', url: 'https://gemini.google.com/', icon: 'https://www.faviconextractor.com/favicon/gemini.google.com?larger=true', description: '谷歌新一代AI对话工具。', categoryId: '1765379444870', createdAt: 1765695429252, pinned: true, order: 1, pinnedOrder: 13 },
+  { id: '1765695429252', title: 'Gemini', url: 'https://gemini.google.com/', icon: 'https://www.faviconextractor.com/favicon/gemini.google.com?larger=true', description: '谷歌新一代 AI 对话工具。', categoryId: '1765379444870', createdAt: 1765695429252, pinned: true, order: 1, pinnedOrder: 13 },
   { id: '17656786301831', title: 'Mastodon e5n.cc', url: 'https://e5n.cc/@eallion', icon: 'https://images.eallion.com/directus/files/4cbefe66-bc79-4be7-b26e-235cea151ecc.svg', description: 'Charles Chin\'s personal Mastodon.', categoryId: 'common', createdAt: 1765678630183, pinned: true, order: 2, iconType: 'customurl', iconConfig: { iconType: 'customurl', customUrl: 'https://images.eallion.com/directus/files/4cbefe66-bc79-4be7-b26e-235cea151ecc.svg' }, pinnedOrder: 2 },
   { id: '176567863018334', title: 'GoToSocial Blog', url: 'https://m.eallion.com', icon: 'https://images.eallion.com/directus/files/dd29efa1-d486-4260-80d1-7bb12cc99c1b.svg', description: 'eallion\'s blog summary on fediverse', categoryId: 'common', createdAt: 1765678630183, pinned: true, order: 3, iconType: 'customurl', iconConfig: { iconType: 'customurl', customUrl: 'https://images.eallion.com/directus/files/dd29efa1-d486-4260-80d1-7bb12cc99c1b.svg' }, pinnedOrder: 3 },
   { id: '176567863018335', title: 'Phanpy', url: 'https://app.e5n.cc', icon: 'https://images.eallion.com/directus/files/aaff7121-a2ce-4dcc-a967-0c8f10c74ddb.svg', description: 'Mastodon Web Client', categoryId: 'common', createdAt: 1765678630183, pinned: true, order: 4, iconType: 'customurl', iconConfig: { iconType: 'customurl', customUrl: 'https://images.eallion.com/directus/files/aaff7121-a2ce-4dcc-a967-0c8f10c74ddb.svg' }, pinnedOrder: 4 },
