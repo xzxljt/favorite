@@ -2,7 +2,24 @@ import { AppConfig, WebDavConfig, SearchConfig, IconConfig, AIConfig, WebsiteCon
 import { STORAGE_KEYS } from '../constants';
 
 // 默认配置
+const DEFAULT_AI_CONFIG: AIConfig = {
+  provider: 'gemini',
+  apiKey: '',
+  baseUrl: '',
+  model: '',
+};
+
+const DEFAULT_WEATHER_CONFIG: WeatherConfig = {
+  enabled: false,
+  apiHost: '',
+  apiKey: '',
+  location: '',
+  unit: 'celsius',
+};
+
 const DEFAULT_APP_CONFIG: AppConfig = {
+  ai: DEFAULT_AI_CONFIG,
+  weather: DEFAULT_WEATHER_CONFIG,
   view: {
     mode: 'compact',
     defaultMode: 'compact',
@@ -26,7 +43,27 @@ class ConfigManager {
     try {
       const savedConfig = localStorage.getItem(STORAGE_KEYS.CONFIG_KEY);
       if (savedConfig) {
-        this.config = { ...DEFAULT_APP_CONFIG, ...JSON.parse(savedConfig) };
+        const parsedConfig = JSON.parse(savedConfig) as AppConfig;
+        this.config = {
+          ...DEFAULT_APP_CONFIG,
+          ...parsedConfig,
+          ai: {
+            ...DEFAULT_AI_CONFIG,
+            ...parsedConfig.ai,
+          },
+          weather: {
+            ...DEFAULT_WEATHER_CONFIG,
+            ...parsedConfig.weather,
+          },
+          view: {
+            ...DEFAULT_APP_CONFIG.view,
+            ...parsedConfig.view,
+          },
+          ui: {
+            ...DEFAULT_APP_CONFIG.ui,
+            ...parsedConfig.ui,
+          },
+        };
       } else {
         this.config = { ...DEFAULT_APP_CONFIG };
       }

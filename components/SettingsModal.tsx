@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { X, Save, Bot, Key, Globe, Sparkles, PauseCircle, Wrench, Box, Copy, Check, Settings, Clock, Lock, LayoutGrid, MessageCircle, Cloud, BookOpen, Upload, CloudCog, LogOut, Download } from 'lucide-react';
+import { X, Save, Bot, Globe, Sparkles, Wrench, Box, Copy, Check, Settings, Clock, LayoutGrid, MessageCircle, Cloud, Upload, CloudCog, LogOut, Download } from 'lucide-react';
 import { AIConfig, LinkItem, PasswordExpiryConfig, MastodonConfig, WeatherConfig } from '../types';
 import { generateLinkDescription } from '../services/geminiService';
 import { toast } from './Toast';
@@ -29,7 +29,13 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
 }) => {
   console.log('SettingsModal rendering. isOpen:', isOpen, 'authToken:', authToken, 'config:', config);
   const [activeTab, setActiveTab] = useState<'tools' | 'website'>('website');
-  const [localConfig, setLocalConfig] = useState<AIConfig>(config || {});
+  const [localConfig, setLocalConfig] = useState<AIConfig>(() => ({
+    provider: 'gemini',
+    apiKey: '',
+    baseUrl: '',
+    model: '',
+    ...config,
+  }));
   const [localPasswordExpiryConfig, setLocalPasswordExpiryConfig] = useState<PasswordExpiryConfig>(passwordExpiryConfig || { value: 1, unit: 'week' });
   const [defaultViewMode, setDefaultViewMode] = useState<'compact' | 'detailed'>('compact');
   const [localMastodonConfig, setLocalMastodonConfig] = useState<MastodonConfig>(mastodonConfig || { enabled: false });
@@ -37,7 +43,14 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
     (mastodonConfig && mastodonConfig.username && mastodonConfig.instance) ?
     `@${mastodonConfig.username}@${mastodonConfig.instance}` : ''
   );
-  const [localWeatherConfig, setLocalWeatherConfig] = useState<WeatherConfig>(weatherConfig || { enabled: false });
+  const [localWeatherConfig, setLocalWeatherConfig] = useState<WeatherConfig>(() => ({
+    enabled: false,
+    apiHost: '',
+    apiKey: '',
+    location: '',
+    unit: 'celsius',
+    ...weatherConfig,
+  }));
 
   // Bulk Generation State
   const [isProcessing, setIsProcessing] = useState(false);
@@ -60,7 +73,13 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
   useEffect(() => {
     if (isOpen) {
       if (config) {
-        setLocalConfig(config);
+        setLocalConfig({
+          provider: 'gemini',
+          apiKey: '',
+          baseUrl: '',
+          model: '',
+          ...config,
+        });
         // 从 AI 配置中读取默认视图模式设置
         if (config.defaultViewMode === 'detailed' || config.defaultViewMode === 'compact') {
           setDefaultViewMode(config.defaultViewMode);
@@ -76,7 +95,16 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
           `@${mastodonConfig.username}@${mastodonConfig.instance}` : ''
         );
       }
-      if (weatherConfig) setLocalWeatherConfig(weatherConfig);
+      if (weatherConfig) {
+        setLocalWeatherConfig({
+          enabled: false,
+          apiHost: '',
+          apiKey: '',
+          location: '',
+          unit: 'celsius',
+          ...weatherConfig,
+        });
+      }
       
       setIsProcessing(false);
       setProgress({ current: 0, total: 0 });
@@ -663,6 +691,91 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             {activeTab === 'website' && (
                 <div className="space-y-6">
+                    <div>
+                        <h4 className="font-bold dark:text-white mb-3 text-sm flex items-center gap-2">
+                            <Bot size={16} /> AI 服务设置
+                        </h4>
+                        <p className="text-xs text-slate-500 mb-4">
+                            配置 AI 接口，用于自动生成链接描述与智能分类建议。
+                        </p>
+                        <div className="space-y-4">
+                            <div>
+                                <label className="block text-xs font-medium text-slate-500 mb-1">
+                                    服务提供商
+                                </label>
+                                <select
+                                    value={localConfig?.provider || 'gemini'}
+                                    onChange={(e) => handleChange('provider', e.target.value)}
+                                    className="w-full p-2.5 rounded-lg border border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                                >
+                                    <option value="gemini">Google Gemini</option>
+                                    <option value="openai">OpenAI 兼容接口</option>
+                                </select>
+                                <p className="text-[10px] text-slate-400 mt-1">
+                                    选择后可配置对应的 API Key 与模型
+                                </p>
+                            </div>
+                            <div>
+                                <label className="block text-xs font-medium text-slate-500 mb-1">
+                                    API Key
+                                </label>
+                                <input
+                                    type="password"
+                                    value={localConfig?.apiKey || ''}
+                                    onChange={(e) => handleChange('apiKey', e.target.value)}
+                                    placeholder="请输入 API Key"
+                                    className="w-full p-2.5 rounded-lg border border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                                />
+                                <p className="text-[10px] text-slate-400 mt-1">
+                                    用于调用 AI 服务的密钥
+                                </p>
+                            </div>
+                            {localConfig?.provider === 'openai' && (
+                                <div>
+                                    <label className="block text-xs font-medium text-slate-500 mb-1">
+                                        接口地址（Base URL）
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={localConfig?.baseUrl || ''}
+                                        onChange={(e) => handleChange('baseUrl', e.target.value)}
+                                        placeholder="https://api.openai.com/v1"
+                                        className="w-full p-2.5 rounded-lg border border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                                    />
+                                    <p className="text-[10px] text-slate-400 mt-1">
+                                        兼容 OpenAI 的接口地址，通常以 /v1 结尾
+                                    </p>
+                                </div>
+                            )}
+                            <div>
+                                <label className="block text-xs font-medium text-slate-500 mb-1">
+                                    模型名称
+                                </label>
+                                <input
+                                    type="text"
+                                    value={localConfig?.model || ''}
+                                    onChange={(e) => handleChange('model', e.target.value)}
+                                    placeholder={localConfig?.provider === 'openai' ? '例如：gpt-4o-mini' : '例如：gemini-2.5-flash'}
+                                    className="w-full p-2.5 rounded-lg border border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                                />
+                                <p className="text-[10px] text-slate-400 mt-1">
+                                    留空将使用默认模型
+                                </p>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <button
+                                    type="button"
+                                    onClick={handleTestAI}
+                                    className="px-3 py-2 text-xs bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors flex items-center gap-2"
+                                >
+                                    <Sparkles size={14} /> 测试 AI 连接
+                                </button>
+                                <p className="text-[10px] text-slate-400">
+                                    保存前可先验证配置是否可用
+                                </p>
+                            </div>
+                        </div>
+                    </div>
 
                     <div>
                         <h4 className="font-bold dark:text-white mb-3 text-sm flex items-center gap-2">
@@ -909,7 +1022,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                             <Cloud size={16} /> 天气设置
                         </h4>
                         <p className="text-xs text-slate-500 mb-4">
-                            配置右上角显示的天气信息，使用今日诗词 API 获取实时天气数据，包含温度、湿度、空气质量等信息。
+                            配置右上角显示的天气信息，使用和风天气 API 获取实时天气数据。
                         </p>
                         <div className="space-y-4">
                             <div>
@@ -933,29 +1046,19 @@ document.addEventListener('DOMContentLoaded', async () => {
                                         <div className="flex items-start gap-3">
                                             <Cloud className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
                                             <div>
-                                                <h5 className="text-sm font-medium text-blue-900 dark:text-blue-100 mb-1">今日诗词天气 API</h5>
+                                                <h5 className="text-sm font-medium text-blue-900 dark:text-blue-100 mb-1">和风天气 API</h5>
                                                 <p className="text-xs text-blue-700 dark:text-blue-300 mb-2">
-                                                    免费开源的天气 API，提供实时天气数据，包含温度、湿度、天气状况、空气质量等信息。
+                                                    需要配置 API Host、Key 与 Location，用于获取实时天气与空气质量数据。
                                                 </p>
                                                 <div className="flex items-center gap-2">
                                                     <a
-                                                        href="https://www.jinrishici.com"
+                                                        href="https://dev.qweather.com/"
                                                         target="_blank"
                                                         rel="noopener noreferrer"
                                                         className="text-xs text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1"
                                                     >
                                                         <Globe size={12} />
-                                                        官方网站
-                                                    </a>
-                                                    <span className="text-xs text-blue-500 dark:text-blue-500">•</span>
-                                                    <a
-                                                        href="https://www.jinrishici.com/doc"
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
-                                                        className="text-xs text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1"
-                                                    >
-                                                        <Cloud size={12} />
-                                                        API 文档
+                                                        官方文档
                                                     </a>
                                                 </div>
                                             </div>
@@ -965,51 +1068,67 @@ document.addEventListener('DOMContentLoaded', async () => {
                                     <div className="grid grid-cols-2 gap-4">
                                         <div>
                                             <label className="block text-xs font-medium text-slate-500 mb-1">
-                                                API 端点
+                                                API Host
                                             </label>
                                             <input
                                                 type="text"
-                                                value="https://v2.jinrishici.com/info"
-                                                readOnly
-                                                className="w-full p-2.5 rounded-lg border border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-400 outline-none transition-all text-sm"
+                                                value={localWeatherConfig?.apiHost || ''}
+                                                onChange={(e) => handleWeatherConfigChange('apiHost', e.target.value)}
+                                                placeholder="例如：devapi.qweather.com"
+                                                className="w-full p-2.5 rounded-lg border border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white outline-none transition-all text-sm focus:ring-2 focus:ring-blue-500"
                                             />
                                             <p className="text-[10px] text-slate-400 mt-1">
-                                                固定端点，获取天气数据和相关诗词信息
+                                                可填写域名或完整 URL
                                             </p>
                                         </div>
                                         <div>
                                             <label className="block text-xs font-medium text-slate-500 mb-1">
-                                                更新频率
+                                                API Key
                                             </label>
                                             <input
-                                                type="text"
-                                                value="每10分钟"
-                                                readOnly
-                                                className="w-full p-2.5 rounded-lg border border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-400 outline-none transition-all text-sm"
+                                                type="password"
+                                                value={localWeatherConfig?.apiKey || ''}
+                                                onChange={(e) => handleWeatherConfigChange('apiKey', e.target.value)}
+                                                placeholder="请输入 Key"
+                                                className="w-full p-2.5 rounded-lg border border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white outline-none transition-all text-sm focus:ring-2 focus:ring-blue-500"
                                             />
                                             <p className="text-[10px] text-slate-400 mt-1">
-                                                自动刷新天气数据
+                                                用于调用和风天气 API
                                             </p>
                                         </div>
                                     </div>
 
-                                    <div>
-                                        <label className="block text-xs font-medium text-slate-500 mb-3">
-                                            显示特性
-                                        </label>
-                                        <div className="grid grid-cols-1 gap-2">
-                                            <div className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-400">
-                                                <div className="w-2 h-2 bg-green-500 rounded-full flex-shrink-0"></div>
-                                                实时显示当前温度和天气状况
-                                            </div>
-                                            <div className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-400">
-                                                <div className="w-2 h-2 bg-green-500 rounded-full flex-shrink-0"></div>
-                                                包含湿度和空气质量数据
-                                            </div>
-                                            <div className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-400">
-                                                <div className="w-2 h-2 bg-green-500 rounded-full flex-shrink-0"></div>
-                                                根据天气状况显示相应图标
-                                            </div>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-xs font-medium text-slate-500 mb-1">
+                                                Location
+                                            </label>
+                                            <input
+                                                type="text"
+                                                value={localWeatherConfig?.location || ''}
+                                                onChange={(e) => handleWeatherConfigChange('location', e.target.value)}
+                                                placeholder="例如：101010100"
+                                                className="w-full p-2.5 rounded-lg border border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white outline-none transition-all text-sm focus:ring-2 focus:ring-blue-500"
+                                            />
+                                            <p className="text-[10px] text-slate-400 mt-1">
+                                                城市 ID 或位置编号
+                                            </p>
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-medium text-slate-500 mb-1">
+                                                温度单位
+                                            </label>
+                                            <select
+                                                value={localWeatherConfig?.unit || 'celsius'}
+                                                onChange={(e) => handleWeatherConfigChange('unit', e.target.value)}
+                                                className="w-full p-2.5 rounded-lg border border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white outline-none transition-all text-sm focus:ring-2 focus:ring-blue-500"
+                                            >
+                                                <option value="celsius">摄氏度 (°C)</option>
+                                                <option value="fahrenheit">华氏度 (°F)</option>
+                                            </select>
+                                            <p className="text-[10px] text-slate-400 mt-1">
+                                                显示的温度单位
+                                            </p>
                                         </div>
                                     </div>
                                 </>
